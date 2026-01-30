@@ -1,0 +1,12 @@
+[
+    {
+        "company": "Bloomberg",
+        "careers_url": "https://bloomberg.avature.net/careers",
+        "tenant": "bloomberg"
+    },
+    {
+        "company": "UCLA Health",
+        "careers_url": "https://uclahealth.avature.net/careers",
+        "tenant": "uclahealth"
+    }
+]
