@@ -20,7 +20,7 @@ Inputs / Outputs
 - Input seed list: `urls.txt` (starter pack + extensions you discover)
 - Tenant list used by scraper: `input/avature_sites.json`
 - Discovered Avature URLs from CC scan: `output/avature_discovered.txt`
-- Scraped jobs: `output/jobs.json`
+- Scraped jobs (NDJSON): `output/jobs.ndjson` (streaming-friendly and faster than pretty JSON)
 
 How Discovery Works
 1) Seed ingestion
@@ -57,7 +57,7 @@ Instructions (Recommended Order)
      - `poetry run python scraper/discover.py --seeds urls.txt --output input/avature_sites.json --discovered-out output/avature_discovered.txt`
    Output:
    - `input/avature_sites.json` (tenants + seed URLs)
-3) Scrape jobs
+3) Scrape jobs (NDJSON output)
    - `poetry run python main.py`
 
 Notes

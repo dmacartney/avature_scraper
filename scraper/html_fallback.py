@@ -6,7 +6,7 @@ import hashlib
 import os
 import random
 import time
-from urllib.parse import urljoin, urlencode
+from urllib.parse import urljoin, urlencode, urlparse
 
 import httpx
 from utils.http import DEFAULT_HEADERS, get
@@ -133,6 +133,7 @@ def iter_searchjobs_pages(base_careers_url: str, page_size: int = 25, max_pages:
 def extract_jobdetail_urls(page_url: str, html: str) -> list[str]:
     soup = BeautifulSoup(html, "html.parser")
     urls: set[str] = set()
+    page_host = urlparse(page_url).netloc.lower()
 
     for a in soup.select("a[href*='JobDetail']"):
         href = a.get("href")
@@ -141,6 +142,15 @@ def extract_jobdetail_urls(page_url: str, html: str) -> list[str]:
         full = urljoin(page_url, href)
         # Normalize by stripping fragments
         full = full.split("#", 1)[0]
+        parsed = urlparse(full)
+        host = parsed.netloc.lower()
+        if not host.endswith("avature.net"):
+            continue
+        if "JobDetail" not in parsed.path:
+            continue
+        if page_host and host != page_host:
+            # Avoid cross-tenant or external domains.
+            continue
         urls.add(full)
 
     return sorted(urls)
@@ -173,13 +183,12 @@ async def iter_searchjobs_pages_async(
     per_host: int = 4,
     min_delay: float = 0.3,
     retries: int = 3,
-) -> list[tuple[str, str]]:
+):
     search_url = base_careers_url.rstrip("/") + "/SearchJobs"
     offset = 0
     state = HostThrottle(per_host)
     timeout = httpx.Timeout(connect=5.0, read=45.0, write=10.0, pool=10.0)
 
-    pages: list[tuple[str, str]] = []
     async with httpx.AsyncClient(headers=DEFAULT_HEADERS, follow_redirects=True) as client:
         for _ in range(max_pages):
             qs = urlencode({"jobOffset": offset, "jobRecordsPerPage": page_size})
@@ -199,10 +208,8 @@ async def iter_searchjobs_pages_async(
             if "JobDetail" not in html:
                 break
 
-            pages.append((url, html))
+            yield url, html
             offset += page_size
-
-    return pages
 
 
 async def fetch_jobdetail_async(

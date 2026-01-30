@@ -12,11 +12,19 @@ def _clean_text(s: str) -> str:
 def parse_jobdetail(html: str, url: str, tenant: str) -> dict:
     soup = BeautifulSoup(html, "html.parser")
 
-    # --- Job ID from URL: /JobDetail/<slug>/<id>
+    # --- Job ID from URL: /JobDetail/<slug>/<id> or /JobDetail/<id>
     job_id = None
     m = re.search(r"/JobDetail/.+?/([0-9]+)(?:\b|/|$)", url)
     if m:
         job_id = m.group(1)
+    if not job_id:
+        m = re.search(r"/JobDetail/([0-9]+)(?:\b|/|$)", url)
+        if m:
+            job_id = m.group(1)
+    if not job_id:
+        m = re.search(r"[?&]jobId=([0-9]+)", url)
+        if m:
+            job_id = m.group(1)
 
     # --- Title: first details article value (NOT the header logo H1)
     title = ""
